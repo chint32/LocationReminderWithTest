@@ -14,13 +14,7 @@ import kotlinx.coroutines.*
 import org.koin.android.ext.android.inject
 import kotlin.coroutines.CoroutineContext
 import com.google.android.gms.location.GeofencingEvent
-
-
-
-
-
-
-
+import org.koin.core.KoinComponent
 
 class GeofenceTransitionsJobIntentService : JobIntentService(), CoroutineScope {
 
@@ -71,7 +65,6 @@ class GeofenceTransitionsJobIntentService : JobIntentService(), CoroutineScope {
 
     }
 
-    //TODO: get the request id of the current geofence
     fun sendGeoNotification(triggeringGeofences: List<Geofence>) {
 
         val requestId = triggeringGeofences[0].requestId
