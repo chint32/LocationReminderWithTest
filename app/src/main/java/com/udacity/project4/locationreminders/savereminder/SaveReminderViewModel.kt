@@ -72,16 +72,20 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
     /**
      * Validate the entered data and show error to the user if there's any invalid data
      */
-    fun validateEnteredData(reminderData: ReminderDataItem): Boolean {
-        if (reminderData.title.isNullOrEmpty()) {
+    fun validateEnteredData(reminderData: ReminderDataItem?): Boolean {
+        if (reminderData?.title.isNullOrEmpty()) {
             showSnackBarInt.value = R.string.err_enter_title
             return false
         }
-
-        if (reminderData.location.isNullOrEmpty()) {
+        if (reminderData?.location.isNullOrEmpty()) {
             showSnackBarInt.value = R.string.err_select_location
             return false
         }
+//
+//        if (reminderData?.location.isNullOrEmpty()) {
+//            showSnackBarInt.value = R.string.err_select_location
+//            return false
+//        }
         return true
     }
 }

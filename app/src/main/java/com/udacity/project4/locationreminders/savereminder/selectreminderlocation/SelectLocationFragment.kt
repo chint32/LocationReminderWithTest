@@ -38,8 +38,6 @@ import org.koin.android.ext.android.inject
 
 class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
-
-
     //Use Koin to get the view model of the SaveReminder
     override val _viewModel: SaveReminderViewModel by inject()
     private lateinit var binding: FragmentSelectLocationBinding
@@ -78,9 +76,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
         mapFragment!!.getMapAsync(this)
 
-
-
-
         return binding.root
     }
 
@@ -90,14 +85,15 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         map = p0
         setMapStyle(map)
         map.isMyLocationEnabled = true
+
         map.setOnPoiClickListener { poi ->
             if (runningQOrLater) {
-                //We need background permission
+                // Need background permission
                 if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                     handlePoiClick(poi)
                 } else {
                     if (ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(), Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
-                        //We show a dialog and ask for permission
+                        // Show a dialog and ask for permission
                         ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION) , BACKGROUND_LOCATION_ACCESS_REQUEST_CODE);
                     } else {
                         ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION), BACKGROUND_LOCATION_ACCESS_REQUEST_CODE);
@@ -106,6 +102,25 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             }
             else {
                 handlePoiClick(poi)
+            }
+        }
+
+        map.setOnMapLongClickListener { latLng ->
+            if (runningQOrLater) {
+                // Need background permission
+                if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    handleLongClick(latLng)
+                } else {
+                    if (ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(), Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
+                        // Show a dialog and ask for permission
+                        ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION) , BACKGROUND_LOCATION_ACCESS_REQUEST_CODE);
+                    } else {
+                        ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION), BACKGROUND_LOCATION_ACCESS_REQUEST_CODE);
+                    }
+                }
+            }
+            else {
+                handleLongClick(latLng)
             }
         }
     }
@@ -120,7 +135,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
                     R.raw.map_style
                 )
             )
-
             if (!success) {
                 Log.e(TAG, "Style parsing failed.")
             }
@@ -131,25 +145,23 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     private fun handlePoiClick(poi: PointOfInterest) {
         map.clear()
-        addMarker(poi)
+        addMarkerPOI(poi)
         addCircle(poi.latLng, GEOFENCE_RADIUS)
         binding.viewModel!!.latitude.value = poi.latLng.latitude
         binding.viewModel!!.longitude.value = poi.latLng.longitude
         binding.viewModel!!.reminderSelectedLocationStr.value = poi.name
     }
 
-
-
-
-
+    private fun handleLongClick(latLng: LatLng) {
+        map.clear()
+        addMarkerDroppedPin(latLng)
+        addCircle(latLng, GEOFENCE_RADIUS)
+        binding.viewModel!!.latitude.value = latLng.latitude
+        binding.viewModel!!.longitude.value = latLng.longitude
+        binding.viewModel!!.reminderSelectedLocationStr.value = "Dropped Pin"
+    }
 
     private fun onLocationSelected() {
-        //TODO: When the user confirms on the selected location,
-        //send back the selected location details to the view model
-        //and navigate back to the previous fragment to save the reminder and add the geofence
-
-//        binding.viewModel!!.longitude.value = userLocation.longitude
-//        binding.viewModel!!.latitude.value = userLocation.latitude
         requireActivity().onBackPressed()
     }
 
@@ -181,11 +193,21 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
 
 
-    private fun addMarker(poi: PointOfInterest) {
+    private fun addMarkerPOI(poi: PointOfInterest) {
         val poiMarker = map.addMarker(
             MarkerOptions()
                 .position(poi.latLng)
                 .title(poi.name)
+        )
+        poiMarker.showInfoWindow()
+
+    }
+
+    private fun addMarkerDroppedPin(latLng: LatLng) {
+        val poiMarker = map.addMarker(
+            MarkerOptions()
+                .position(latLng)
+                .title("Dropped Pin")
         )
         poiMarker.showInfoWindow()
 

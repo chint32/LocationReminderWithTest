@@ -34,10 +34,24 @@ android {
         includeAndroidResources = true
         returnDefaultValues = true
     }
-
+    android {
+        packagingOptions {
+            pickFirst 'META-INF/AL2.0'
+            pickFirst 'META-INF/LGPL2.1'
+        }
+    }
 
     buildFeatures {
         dataBinding true
+    }
+}
+android.sourceSets {
+    test {
+        java.srcDirs += "$projectDir/src/testShared"
+    }
+
+    androidTest {
+        java.srcDirs += "$projectDir/src/testShared"
     }
 }
 
@@ -47,6 +61,7 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$appCompatVersion"
     implementation "androidx.legacy:legacy-support-v4:$androidXLegacySupport"
     implementation "androidx.annotation:annotation:$androidXAnnotations"
+    implementation "androidx.core:core-ktx:1.5.0"
 
     implementation "androidx.cardview:cardview:$cardVersion"
     implementation "com.google.android.material:material:$materialVersion"
@@ -124,8 +139,9 @@ dependencies {
 
 
     //Maps & Geofencing
-    implementation "com.google.android.gms:play-services-location:$playServicesVersion"
-    implementation "com.google.android.gms:play-services-maps:$playServicesVersion"
+    implementation "com.google.android.gms:play-services-location:16.0.0"
+    implementation "com.google.android.gms:play-services-maps:16.1.0"
 
+    implementation 'androidx.core:core-ktx:1.2.0-alpha01'
 
 }

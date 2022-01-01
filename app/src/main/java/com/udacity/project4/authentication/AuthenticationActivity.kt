@@ -10,12 +10,14 @@ import android.view.autofill.AutofillManager
 import android.widget.Toast
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultLauncher
+import androidx.databinding.DataBindingUtil
 import androidx.navigation.Navigation
 import androidx.navigation.findNavController
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.firebase.auth.FirebaseAuth
+import com.udacity.project4.databinding.ActivityAuthenticationBinding
 import com.udacity.project4.locationreminders.RemindersActivity
 import kotlinx.android.synthetic.main.activity_authentication.*
 
@@ -32,11 +34,14 @@ class AuthenticationActivity : AppCompatActivity() {
         this.onSignInResult(res)
     }
 
+    private lateinit var binding: ActivityAuthenticationBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_authentication)
-
-
+        binding = DataBindingUtil.setContentView(
+            this, R.layout.activity_authentication
+        )
     }
 
     fun login(view: View) {
@@ -62,8 +67,6 @@ class AuthenticationActivity : AppCompatActivity() {
             // Successfully signed in
             val user = FirebaseAuth.getInstance().currentUser
             Toast.makeText(this, "${user?.displayName} successfully logged in.", Toast.LENGTH_SHORT).show()
-
-
             startActivity(Intent(this, RemindersActivity::class.java))
         } else {
             Toast.makeText(this, "Login failed.", Toast.LENGTH_SHORT).show()
