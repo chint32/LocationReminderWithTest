@@ -3,36 +3,24 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.PendingIntent
-import android.content.Intent
-import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.*
-import android.widget.Toast
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
-import com.google.android.gms.common.api.ResolvableApiException
-import com.google.android.gms.location.*
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
-import com.google.android.material.snackbar.Snackbar
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
-import com.udacity.project4.locationreminders.geofence.GeofenceBroadcastReceiver
-import com.udacity.project4.locationreminders.geofence.GeofenceHelper
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import kotlinx.android.synthetic.main.fragment_select_location.*
-import org.koin.android.ext.android.bind
 import org.koin.android.ext.android.inject
 
 
@@ -43,20 +31,8 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private lateinit var binding: FragmentSelectLocationBinding
 
     private lateinit var map: GoogleMap
-    private val runningQOrLater = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
 
-    private val GEOFENCE_RADIUS = 200f
-    private val BACKGROUND_LOCATION_ACCESS_REQUEST_CODE = 10002
-
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-
-        save_location_btn.setOnClickListener(View.OnClickListener {
-
-            onLocationSelected()
-        })
-    }
-
+    private val GEOFENCE_RADIUS_METERS = 200f
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -76,6 +52,11 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
         mapFragment!!.getMapAsync(this)
 
+        binding.saveLocationBtn.setOnClickListener(View.OnClickListener {
+
+            onLocationSelected()
+        })
+
         return binding.root
     }
 
@@ -84,44 +65,26 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     override fun onMapReady(p0: GoogleMap) {
         map = p0
         setMapStyle(map)
-        map.isMyLocationEnabled = true
+
+        // User should have granted permission in previous fragment.
+        // Tried to ask for permission in this fragment but the user
+        // would have to re-open the map for the permissions to take effect.
+        if (ContextCompat.checkSelfPermission(
+                requireActivity(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            map.isMyLocationEnabled = true
+        }
 
         map.setOnPoiClickListener { poi ->
-            if (runningQOrLater) {
-                // Need background permission
-                if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                    handlePoiClick(poi)
-                } else {
-                    if (ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(), Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
-                        // Show a dialog and ask for permission
-                        ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION) , BACKGROUND_LOCATION_ACCESS_REQUEST_CODE);
-                    } else {
-                        ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION), BACKGROUND_LOCATION_ACCESS_REQUEST_CODE);
-                    }
-                }
-            }
-            else {
-                handlePoiClick(poi)
-            }
+
+            handlePoiClick(poi)
         }
 
         map.setOnMapLongClickListener { latLng ->
-            if (runningQOrLater) {
-                // Need background permission
-                if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                    handleLongClick(latLng)
-                } else {
-                    if (ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(), Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
-                        // Show a dialog and ask for permission
-                        ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION) , BACKGROUND_LOCATION_ACCESS_REQUEST_CODE);
-                    } else {
-                        ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION), BACKGROUND_LOCATION_ACCESS_REQUEST_CODE);
-                    }
-                }
-            }
-            else {
-                handleLongClick(latLng)
-            }
+
+            handleLongClick(latLng)
         }
     }
 
@@ -146,7 +109,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private fun handlePoiClick(poi: PointOfInterest) {
         map.clear()
         addMarkerPOI(poi)
-        addCircle(poi.latLng, GEOFENCE_RADIUS)
+        addCircle(poi.latLng, GEOFENCE_RADIUS_METERS)
         binding.viewModel!!.latitude.value = poi.latLng.latitude
         binding.viewModel!!.longitude.value = poi.latLng.longitude
         binding.viewModel!!.reminderSelectedLocationStr.value = poi.name
@@ -155,7 +118,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     private fun handleLongClick(latLng: LatLng) {
         map.clear()
         addMarkerDroppedPin(latLng)
-        addCircle(latLng, GEOFENCE_RADIUS)
+        addCircle(latLng, GEOFENCE_RADIUS_METERS)
         binding.viewModel!!.latitude.value = latLng.latitude
         binding.viewModel!!.longitude.value = latLng.longitude
         binding.viewModel!!.reminderSelectedLocationStr.value = "Dropped Pin"
@@ -192,7 +155,6 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     }
 
 
-
     private fun addMarkerPOI(poi: PointOfInterest) {
         val poiMarker = map.addMarker(
             MarkerOptions()
@@ -226,3 +188,5 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 }
 
 private const val TAG = "SelectLocationFragment"
+
+
