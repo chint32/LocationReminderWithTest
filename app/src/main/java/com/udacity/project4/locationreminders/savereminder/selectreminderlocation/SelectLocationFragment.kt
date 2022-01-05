@@ -17,6 +17,8 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.*
+import android.widget.Toast
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import com.google.android.gms.common.api.ResolvableApiException
@@ -246,37 +248,55 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
         locationSettingsResponseTask.addOnCompleteListener {
             if (it.isSuccessful) {
-                map.isMyLocationEnabled = true
-                locationManager.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER,
-                    0,
-                    0f,
-                    locationListener
-                )
-
-                lastKnownLocation =
-                    locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                if (lastKnownLocation != null) {
+                if(isForegroundPermissionApproved()) {
                     map.isMyLocationEnabled = true
-                    val userLocation =
-                        LatLng(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude)
-                    map.moveCamera(CameraUpdateFactory.newLatLng(userLocation))
+                    locationManager.requestLocationUpdates(
+                        LocationManager.GPS_PROVIDER,
+                        0,
+                        0f,
+                        locationListener
+                    )
+
+                    lastKnownLocation =
+                        locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                    if (lastKnownLocation != null) {
+                        map.isMyLocationEnabled = true
+                        val userLocation =
+                            LatLng(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude)
+                        map.moveCamera(CameraUpdateFactory.newLatLng(userLocation))
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "For a better app experience, please enable location in settings", Toast.LENGTH_SHORT).show()
                 }
+            } else {
+                Toast.makeText(requireContext(), "For a better app experience, please enable location in settings", Toast.LENGTH_SHORT).show()
             }
 
         }
 
-        Log.i(TAG, "Permissions GRanted on Listener, setting location layer to true")
-        map.setMyLocationEnabled(true)
-        locationEnabled = true
-        locationManager.requestLocationUpdates(
-            LocationManager.GPS_PROVIDER,
-            0,
-            0f,
-            locationListener
-        );
+        if(isForegroundPermissionApproved()){
+            Log.i(TAG, "Permissions GRanted on Listener, setting location layer to true")
+            map.setMyLocationEnabled(true)
+            locationEnabled = true
+            locationManager.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER,
+                0,
+                0f,
+                locationListener
+            )
+        }
     }
 
+    private fun isForegroundPermissionApproved(): Boolean {
+
+        return (
+                PackageManager.PERMISSION_GRANTED ==
+                        ActivityCompat.checkSelfPermission(
+                            requireContext(),
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                        )
+                )
+    }
 
     private fun setMapStyle(map: GoogleMap) {
         try {
