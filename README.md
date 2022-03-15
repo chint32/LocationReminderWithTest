@@ -1,5 +1,5 @@
 # LocationReminderWithTest
-Udacity Nano Degree Project that allows the user to create reminders that are triggered when at a certain location(Grocery store - don't forget eggs this time). 
+Udacity Nano Degree Project that allows the user to create reminders that are triggered when at a certain location(Grocery store - don't forget eggs this time!). 
 Contains authenticated login via Firebase. 
 Contains unit tests and integration tests.
 
