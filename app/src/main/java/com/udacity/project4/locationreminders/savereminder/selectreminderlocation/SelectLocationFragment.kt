@@ -207,7 +207,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
             Snackbar.make(
                 binding.root,
                 R.string.permission_denied_explanation,
-                Snackbar.LENGTH_INDEFINITE
+                Snackbar.LENGTH_LONG
             )
                 .setAction(R.string.settings) {
                     startActivityForResult(Intent().apply {
@@ -275,6 +275,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         }
 
         if(isForegroundPermissionApproved()){
+
             Log.i(TAG, "Permissions GRanted on Listener, setting location layer to true")
             map.setMyLocationEnabled(true)
             locationEnabled = true
